@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.*
+db
+*.log
+lib
+.DS_Store
+.vscode
+*.tar.gz
