@@ -19,5 +19,12 @@
     "@subsquid/typeorm-codegen": "^2.0.1",
     "@types/node": "^20.14.8",
     "typescript": "~5.5.2"
+  },
+  {
+  "scripts": {
+    "build": "rm -rf lib && tsc",
+    "process": "node lib/main.js",
+    "serve": "node server.js",
+    "start": "node server.js"
   }
 }
