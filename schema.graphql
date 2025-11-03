@@ -1,0 +1,38 @@
+type NFT @entity {
+  id: ID! # tokenId
+  tokenId: Int! @index
+  owner: String! @index
+  metadata: String
+  name: String
+  image: String
+  attributes: [Trait!] @derivedFrom(field: "nft")
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  listing: Listing @derivedFrom(field: "nft")
+}
+
+type Trait @entity {
+  id: ID!
+  nft: NFT!
+  traitType: String! @index
+  value: String! @index
+}
+
+type Listing @entity {
+  id: ID!
+  nft: NFT! @unique
+  seller: String! @index
+  price: BigInt!
+  active: Boolean! @index
+  listedAt: DateTime!
+  soldAt: DateTime
+}
+
+type Sale @entity {
+  id: ID!
+  tokenId: Int! @index
+  seller: String! @index
+  buyer: String! @index
+  price: BigInt!
+  timestamp: DateTime! @index
+}

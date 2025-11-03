@@ -1,0 +1,21 @@
+manifestVersion: subsquid.io/v0.1
+name: hypurr-indexer
+version: 1
+description: Hypurr NFT Marketplace Indexer
+
+build:
+
+deploy:
+  addons:
+    postgres:
+  processor:
+    cmd:
+      - node
+      - lib/main.js
+  api:
+    cmd:
+      - npx
+      - squid-graphql-server
+
+scale:
+  dedicated: false
