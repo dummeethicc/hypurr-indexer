@@ -9,6 +9,29 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
   const listings: Map<string, Listing> = new Map();
   const sales: Sale[] = [];
 
+  // Load existing listings for updates
+  const tokenIds = new Set<string>();
+  for (let block of ctx.blocks) {
+    for (let log of block.logs) {
+      if (log.address === '0x9125e2d6827a00b0f8330d6ef7bef07730bac685') {
+        const { tokenId } = nftAbi.events.Transfer.decode(log);
+        tokenIds.add(tokenId.toString());
+      }
+      if (log.address === '0xfaae9954495ce59702556cf56eedc3d79da12b93') {
+        const decoded = marketplaceAbi.events.Listed.decode(log);
+        if (decoded) tokenIds.add(decoded.tokenId.toString());
+      }
+    }
+  }
+
+  // Load existing entities
+  const existingListings = await ctx.store.findBy(Listing, {
+    id: [...tokenIds].map(id => `listing-${id}`)
+  });
+  for (let listing of existingListings) {
+    listings.set(listing.nft.id, listing);
+  }
+
   for (let block of ctx.blocks) {
     for (let log of block.logs) {
       
@@ -38,8 +61,22 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
           log.topics[0] === marketplaceAbi.events.Listed.topic) {
         const { tokenId, seller, price } = marketplaceAbi.events.Listed.decode(log);
         
+        // Get or create NFT
+        let nft = nfts.get(tokenId.toString());
+        if (!nft) {
+          nft = new NFT({
+            id: tokenId.toString(),
+            tokenId: Number(tokenId),
+            owner: seller.toLowerCase(),
+            createdAt: new Date(block.header.timestamp),
+            updatedAt: new Date(block.header.timestamp),
+          });
+          nfts.set(tokenId.toString(), nft);
+        }
+        
         const listing = new Listing({
-          id: `${tokenId}-${log.transactionHash}`,
+          id: `listing-${tokenId}`, // Use consistent ID
+          nft: nft,
           seller: seller.toLowerCase(),
           price: price,
           active: true,
